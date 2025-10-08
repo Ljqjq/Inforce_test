@@ -55,7 +55,7 @@ export default function ProductView() {
   };
 
   const handleUpdated = async (updated: Product) => {
-    // updated comes from AddProductModal after PUT
+    
     setProduct(updated);
     setEditing(false);
     setToast({ open: true, msg: 'Product updated', severity: 'success' });
@@ -66,7 +66,7 @@ export default function ProductView() {
     const text = commentText.trim();
     if (!text) return setToast({ open: true, msg: 'Comment cannot be empty', severity: 'error' });
 
-    // create new Comment object (id generated locally; json-server will ignore id in nested array but we keep simple)
+   
     const newComment: Comment = {
       id: Date.now(),
       productId: product.id,
@@ -79,7 +79,7 @@ export default function ProductView() {
     try {
       setLoading(true);
       const res = await axios.put<Product>(`${API_URL}/${product.id}`, {
-        // server expects product shape without id in body for PUT; keep entire object to be safe
+        
         ...updatedProduct,
       });
       setProduct(res.data);

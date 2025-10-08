@@ -5,6 +5,7 @@ import { fetchProducts, deleteProduct } from '../redux/productsSlice';
 import type { Product } from '../types/models';
 import AddProductModal from '../components/AddProductModal';
 import ProductCard from '../components/ProductCard';
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog';
 import {
   Box,
   Typography,
@@ -32,12 +33,10 @@ function compareName(a: Product, b: Product) {
 
 function sortProducts(items: Product[], mode: SortMode) {
   return [...items].sort((a, b) => {
-    // Primary: name ascending or descending
     const nameCmp = compareName(a, b);
     const nameDir = mode.startsWith('nameAsc') ? 1 : -1;
     if (nameCmp !== 0) return nameCmp * nameDir;
 
-    // Secondary: count ascending or descending
     const countDir = mode.endsWith('countAsc') ? 1 : -1;
     const ca = Number(a.count ?? 0);
     const cb = Number(b.count ?? 0);
@@ -59,7 +58,11 @@ export default function ProductListView() {
     severity: 'success',
   });
 
-  // default sort: name ascending then count ascending
+  
+  const [deleteCandidate, setDeleteCandidate] = useState<number | string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  
   const [sortMode, setSortMode] = useState<SortMode>('nameAsc_countAsc');
 
   useEffect(() => {
@@ -70,7 +73,6 @@ export default function ProductListView() {
     setSortMode(e.target.value as SortMode);
   };
 
-  // apply search filter, then sorting (always alphabetical first by design)
   const filteredAndSorted = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = items.filter((p) => p.name.toLowerCase().includes(q));
@@ -94,13 +96,24 @@ export default function ProductListView() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number | string) => {
+  
+  const openDeleteDialog = (id: number | string) => {
+    setDeleteCandidate(id);
+    setDeleteDialogOpen(true);
+  };
+
+ 
+  const confirmDelete = async () => {
+    if (deleteCandidate == null) return;
     try {
-      await dispatch(deleteProduct(id)).unwrap();
+      await dispatch(deleteProduct(deleteCandidate)).unwrap();
       await dispatch(fetchProducts());
       setToast({ open: true, msg: 'Deleted', severity: 'success' });
     } catch {
       setToast({ open: true, msg: 'Delete failed', severity: 'error' });
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeleteCandidate(null);
     }
   };
 
@@ -148,7 +161,7 @@ export default function ProductListView() {
       >
         {filteredAndSorted.map((product) => (
           <Box key={product.id}>
-            <ProductCard product={product} onEdit={handleEdit} onDelete={handleDelete} />
+            <ProductCard product={product} onEdit={handleEdit} onDelete={(id) => openDeleteDialog(id)} />
           </Box>
         ))}
       </Box>
@@ -162,6 +175,17 @@ export default function ProductListView() {
         onCreated={handleCreated}
         initialProduct={editingProduct ?? undefined}
         onUpdated={handleUpdated}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        title="Delete product"
+        message="Are you sure you want to delete this product?"
+        onConfirm={confirmDelete}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setDeleteCandidate(null);
+        }}
       />
 
       <Snackbar
