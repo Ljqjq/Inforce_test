@@ -7,6 +7,14 @@ import AddProductModal from '../components/AddProductModal';
 import ProductCard from '../components/ProductCard';
 import { Box, Typography, Button, TextField, Stack, Snackbar, Alert } from '@mui/material';
 
+function sortByName(a: Product, b: Product) {
+  const na = (a.name ?? '').toLowerCase();
+  const nb = (b.name ?? '').toLowerCase();
+  if (na < nb) return -1;
+  if (na > nb) return 1;
+  return 0;
+}
+
 export default function ProductListView() {
   const dispatch = useDispatch<AppDispatch>();
   const items = useSelector((s: RootState) => s.products.items);
@@ -24,13 +32,19 @@ export default function ProductListView() {
     dispatch(fetchProducts());
   }, [dispatch]);
 
+  // Whenever the authoritative items change, produce a sorted copy
   useEffect(() => {
-    setFiltered(items);
+    const copy = [...items].sort(sortByName);
+    setFiltered(copy);
   }, [items]);
 
+  // Whenever the query or items change, apply search + alphabetical sort
   useEffect(() => {
     const q = query.trim().toLowerCase();
-    setFiltered(items.filter((p) => p.name.toLowerCase().includes(q)));
+    const results = items
+      .filter((p) => p.name.toLowerCase().includes(q))
+      .sort(sortByName);
+    setFiltered(results);
   }, [query, items]);
 
   const handleCreated = async (product: Product) => {

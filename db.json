@@ -59,6 +59,18 @@
       "weight": "67",
       "comments": [],
       "id": "b375"
+    },
+    {
+      "id": "278b",
+      "imageUrl": "",
+      "name": "b",
+      "count": 2,
+      "size": {
+        "width": 3,
+        "height": 4
+      },
+      "weight": "2",
+      "comments": []
     }
   ],
   "comments": []
