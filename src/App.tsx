@@ -1,13 +1,16 @@
-import { Container } from '@mui/material';
-import MainLayout from './components/MainLayout';
+// src/App.tsx
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ProductListView from './pages/ProductListView';
+import ProductView from './pages/ProductView';
 
 export default function App() {
   return (
-    <MainLayout>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <ProductListView />
-      </Container>
-    </MainLayout>
+    <Routes>
+      <Route path="/" element={<Navigate to="/products" replace />} />
+      <Route path="/products" element={<ProductListView />} />
+      <Route path="/products/:id" element={<ProductView />} />
+      {/* add other routes here */}
+    </Routes>
   );
 }
