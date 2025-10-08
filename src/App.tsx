@@ -1,15 +1,13 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Container } from '@mui/material';
+import MainLayout from './components/MainLayout';
 import ProductListView from './pages/ProductListView';
 
-const App: React.FC = () => {
+export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<ProductListView />} />
-      </Routes>
-    </Router>
+    <MainLayout>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <ProductListView />
+      </Container>
+    </MainLayout>
   );
-};
-
-export default App;
+}

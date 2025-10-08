@@ -17,6 +17,15 @@
       "size": { "width": 120, "height": 80 },
       "weight": "150g",
       "comments": []
+    },
+    {
+      "id": 3,
+      "imageUrl": "https://via.placeholder.com/150",
+      "name": "Penis",
+      "count": 10,
+      "size": { "width": 120, "height": 80 },
+      "weight": "150g",
+      "comments": []
     }
   ],
   "comments": []
