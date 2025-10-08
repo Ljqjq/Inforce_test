@@ -4,10 +4,22 @@ import type { Product } from '../types/models';
 
 const API_URL = 'http://localhost:3001/products';
 
-export const fetchProducts = createAsyncThunk<Product[]>('products/fetch', async () => {
-  const response = await axios.get<Product[]>(API_URL);
-  return response.data;
-});
+export const updateProduct = createAsyncThunk<Product, Product>(
+  'products/update',
+  async (product) => {
+    const { id, ...payload } = product;
+    const res = await axios.put<Product>(`${API_URL}/${id}`, payload);
+    return res.data;
+  }
+);
+
+export const fetchProducts = createAsyncThunk<Product[]>(
+  'products/fetch',
+  async () => {
+    const response = await axios.get<Product[]>(API_URL);
+    return response.data;
+  }
+);
 
 export const deleteProduct = createAsyncThunk<number | string, number | string>(
   'products/delete',
@@ -33,10 +45,9 @@ const productsSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    // optional local reducers (e.g., optimistic add) can go here
     addLocalProduct(state, action: PayloadAction<Product>) {
       state.items.push(action.payload);
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -59,10 +70,25 @@ const productsSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteProduct.fulfilled, (state, action: PayloadAction<number | string>) => {
-        state.items = state.items.filter((p) => p.id !== action.payload);
+        const removedId = action.payload;
+        if (removedId == null) return;
+        state.items = state.items.filter((p) => String(p.id) !== String(removedId));
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.error = action.error.message ?? 'Failed to delete product';
+      })
+
+      // updateProduct
+      .addCase(updateProduct.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateProduct.fulfilled, (state, action: PayloadAction<Product>) => {
+        const updated = action.payload;
+        if (!updated || typeof updated.id === 'undefined') return;
+        state.items = state.items.map((p) => (String(p.id) === String(updated.id) ? updated : p));
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.error = action.error.message ?? 'Failed to update product';
       });
   },
 });

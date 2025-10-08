@@ -15,5 +15,5 @@ export interface Product {
     height: number;
   };
   weight: string;
-  comments: Comment[];
+  comments: Comment[]; 
 }

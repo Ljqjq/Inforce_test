@@ -5,9 +5,7 @@ import { fetchProducts, deleteProduct } from '../redux/productsSlice';
 import type { Product } from '../types/models';
 import AddProductModal from '../components/AddProductModal';
 import ProductCard from '../components/ProductCard';
-import {
-  Box, Typography, Button, TextField, Stack, Snackbar, Alert
-} from '@mui/material';
+import { Box, Typography, Button, TextField, Stack, Snackbar, Alert } from '@mui/material';
 
 export default function ProductListView() {
   const dispatch = useDispatch<AppDispatch>();
@@ -15,40 +13,69 @@ export default function ProductListView() {
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [query, setQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toast, setToast] = useState<{open:boolean;msg:string;severity:'success'|'error'|'info'}>({open:false,msg:'',severity:'success'});
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [toast, setToast] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' | 'info' }>({
+    open: false,
+    msg: '',
+    severity: 'success',
+  });
 
-  useEffect(() => { dispatch(fetchProducts()); }, [dispatch]);
-  useEffect(() => { setFiltered(items); }, [items]);
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setFiltered(items);
+  }, [items]);
 
   useEffect(() => {
     const q = query.trim().toLowerCase();
-    setFiltered(items.filter(product => product.name.toLowerCase().includes(q)));
+    setFiltered(items.filter((p) => p.name.toLowerCase().includes(q)));
   }, [query, items]);
 
-  const handleCreated = (product: Product) => {
-    setFiltered(prev => [...prev, product]);
+  const handleCreated = async (product: Product) => {
+    await dispatch(fetchProducts());
     setToast({ open: true, msg: 'Product added', severity: 'success' });
   };
 
-  const handleEdit = (product: Product) => {
-    setToast({ open:true, msg:'Edit not implemented', severity:'info' });
+  const handleUpdated = async (product: Product) => {
+    setEditingProduct(null);
+    setIsModalOpen(false);
+    await dispatch(fetchProducts());
+    setToast({ open: true, msg: 'Product updated', severity: 'success' });
   };
 
-  const handleDelete = async (id: number|string) => {
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: number | string) => {
     try {
       await dispatch(deleteProduct(id)).unwrap();
-      setToast({ open:true, msg:'Deleted', severity:'success' });
+      await dispatch(fetchProducts());
+      setToast({ open: true, msg: 'Deleted', severity: 'success' });
     } catch {
-      setToast({ open:true, msg:'Delete failed', severity:'error' });
+      setToast({ open: true, msg: 'Delete failed', severity: 'error' });
     }
   };
 
   return (
     <Box>
-      <Stack direction={{xs:'column', sm:'row'}} spacing={2} alignItems="center" sx={{ mb:3 }}>
-        <Typography variant="h4" sx={{ flexGrow: 1 }}>Products</Typography>
-        <TextField size="small" placeholder="Search products" value={query} onChange={e=>setQuery(e.target.value)} />
-        <Button variant="contained" onClick={()=>setIsModalOpen(true)}>Add Product</Button>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ flexGrow: 1 }}>
+          Products
+        </Typography>
+        <TextField size="small" placeholder="Search products" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Button
+          variant="contained"
+          onClick={() => {
+            setEditingProduct(null);
+            setIsModalOpen(true);
+          }}
+        >
+          Add Product
+        </Button>
       </Stack>
 
       <Box
@@ -70,10 +97,24 @@ export default function ProductListView() {
         ))}
       </Box>
 
-      <AddProductModal open={isModalOpen} onClose={()=>setIsModalOpen(false)} onCreated={handleCreated} />
+      <AddProductModal
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingProduct(null);
+        }}
+        onCreated={handleCreated}
+        initialProduct={editingProduct ?? undefined}
+        onUpdated={handleUpdated}
+      />
 
-      <Snackbar open={toast.open} autoHideDuration={3000} onClose={()=>setToast(t=>({...t,open:false}))} anchorOrigin={{vertical:'bottom', horizontal:'center'}}>
-        <Alert severity={toast.severity} onClose={()=>setToast(t=>({...t,open:false}))} sx={{ width: '100%' }}>
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={() => setToast((t) => ({ ...t, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={toast.severity} onClose={() => setToast((t) => ({ ...t, open: false }))} sx={{ width: '100%' }}>
           {toast.msg}
         </Alert>
       </Snackbar>
